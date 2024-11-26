@@ -23,11 +23,21 @@ jobs:
           python -m pip install --upgrade pip
           pip install icalendar requests pytz
 
+      - name: Create Output Directory
+        run: |
+          mkdir -p output
+          echo "<!DOCTYPE html><html><head><title>Calendar Sync</title></head><body><h1>Calendar Sync</h1><p>Last updated: $(date)</p><p><a href='calendar.ics'>Download Calendar</a></p></body></html>" > output/index.html
+
       - name: Process Calendar
         run: |
           python process_calendar.py
         env:
           CALENDAR_URL: 'https://api.plan.toggl.com/api/v4/sharing/7JSUutAmDsvlToJ/icalendar'
+
+      - name: List Output Files
+        run: |
+          echo "Contents of output directory:"
+          ls -la output/
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
@@ -36,3 +46,4 @@ jobs:
           publish_dir: ./output
           publish_branch: gh-pages
           force_orphan: true
+          enable_jekyll: false

@@ -3,62 +3,49 @@ import requests
 from icalendar import Calendar, Event
 from datetime import datetime
 import pytz
+import logging
 
-def download_calendar(url):
-    response = requests.get(url)
-    response.raise_for_status()
-    return response.text
-
-def process_calendar(ical_data):
-    # 解析原始日历
-    cal = Calendar.from_ical(ical_data)
-
-    # 创建新的日历
-    new_cal = Calendar()
-    new_cal.add('prodid', '-//My Calendar Processor//EN')
-    new_cal.add('version', '2.0')
-
-    # 筛选事件
-    for component in cal.walk():
-        if component.name == "VEVENT":
-            # 检查是否有具体时间
-            dtstart = component.get('dtstart')
-            if dtstart and hasattr(dtstart.dt, 'hour'):  # 如果有hour属性，说明不是全天事件
-                new_cal.add_component(component)
-
-    return new_cal
+# 设置日志
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def main():
-    # 创建输出目录
-    os.makedirs('output', exist_ok=True)
+    try:
+        # 确保输出目录存在
+        output_dir = os.path.join(os.getcwd(), 'output')
+        os.makedirs(output_dir, exist_ok=True)
+        logger.info(f"Working directory: {os.getcwd()}")
+        logger.info(f"Output directory: {output_dir}")
 
-    # 下载和处理日历
-    calendar_url = os.environ['CALENDAR_URL']
-    ical_data = download_calendar(calendar_url)
-    new_cal = process_calendar(ical_data)
+        # 创建一个基本的日历文件（测试用）
+        test_cal = Calendar()
+        test_cal.add('prodid', '-//Test Calendar//EN')
+        test_cal.add('version', '2.0')
 
-    # 保存处理后的日历
-    with open('output/calendar.ics', 'wb') as f:
-        f.write(new_cal.to_ical())
+        # 添加测试事件
+        event = Event()
+        event.add('summary', 'Test Event')
+        now = datetime.now(pytz.UTC)
+        event.add('dtstart', now)
+        event.add('dtend', now)
+        event.add('dtstamp', now)
+        test_cal.add_component(event)
 
-    # 创建index.html文件以便于访问
-    html_content = """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Calendar</title>
-        <meta charset="utf-8">
-    </head>
-    <body>
-        <h1>Calendar</h1>
-        <p>Last updated: {}</p>
-        <p><a href="calendar.ics">Download Calendar</a></p>
-    </body>
-    </html>
-    """.format(datetime.now(pytz.UTC).strftime('%Y-%m-%d %H:%M:%S UTC'))
+        # 保存测试日历
+        calendar_path = os.path.join(output_dir, 'calendar.ics')
+        with open(calendar_path, 'wb') as f:
+            f.write(test_cal.to_ical())
+        logger.info(f"Created test calendar at {calendar_path}")
 
-    with open('output/index.html', 'w', encoding='utf-8') as f:
-        f.write(html_content)
+        # 列出所有创建的文件
+        logger.info("Files in output directory:")
+        for file in os.listdir(output_dir):
+            file_path = os.path.join(output_dir, file)
+            logger.info(f"- {file}: {os.path.getsize(file_path)} bytes")
+
+    except Exception as e:
+        logger.error(f"Error occurred: {str(e)}", exc_info=True)
+        raise
 
 if __name__ == '__main__':
     main()
