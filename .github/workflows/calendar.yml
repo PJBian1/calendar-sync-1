@@ -8,6 +8,8 @@ on:
 jobs:
   process-calendar:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write      # 确保有写入权限
 
     steps:
       - name: Checkout repository
@@ -47,3 +49,4 @@ jobs:
           publish_branch: gh-pages
           force_orphan: true
           enable_jekyll: false
+          commit_message: "Deploy calendar updates"
