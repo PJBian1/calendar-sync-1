@@ -1,0 +1,38 @@
+name: Process and Deploy Calendar
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'  # 每5分钟运行一次
+  workflow_dispatch:        # 允许手动触发
+
+jobs:
+  process-calendar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install icalendar requests pytz
+
+      - name: Process Calendar
+        run: |
+          python process_calendar.py
+        env:
+          CALENDAR_URL: 'https://api.plan.toggl.com/api/v4/sharing/7JSUutAmDsvlToJ/icalendar'
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./output
+          publish_branch: gh-pages
+          force_orphan: true
