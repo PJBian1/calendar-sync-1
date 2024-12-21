@@ -1,0 +1,5 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Toggl Calendar Processor//EN
+X-WR-CALNAME:Toggl Calendar
+END:VCALENDAR
